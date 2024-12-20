@@ -1,0 +1,7 @@
+.*
+vite.config.ts
+
+examples
+__test__
+*.test.ts
+coverage

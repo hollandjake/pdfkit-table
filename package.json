@@ -1,0 +1,56 @@
+{
+  "name": "@hollandjake/pdfkit-table",
+  "version": "0.0.0",
+  "description": "PDFKit extension for generating tables",
+  "license": "MIT",
+  "author": "Jake Holland",
+  "homepage": "https://github.com/hollandjake/pdfkit-table",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hollandjake/pdfkit-table.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hollandjake/pdfkit-table/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "clean": "gts clean",
+    "clean:build": "pnpm clean && pnpm build",
+    "lint": "gts lint",
+    "lint:fix": "gts fix",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "pdfkit": "^0.15.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/pdfkit": "^0.13.8",
+    "@vitest/coverage-istanbul": "^2.1.8",
+    "gts": "^5.3.1",
+    "prettier-plugin-organize-imports": "^4.1.0",
+    "typescript": "5.4.2",
+    "vite": "^5.4.0",
+    "vite-plugin-dts": "^4.4.0",
+    "vitest": "^2.1.8"
+  },
+  "keywords": [
+    "pdfkit",
+    "pdf",
+    "tables",
+    "table"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "readme": "./README.md"
+}
