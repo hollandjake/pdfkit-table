@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/hollandjake/pdfkit-table/compare/v0.1.0...v0.2.0) (2024-12-21)
+
+
+### Features
+
+* support dynamic sizing ([5482f04](https://github.com/hollandjake/pdfkit-table/commit/5482f04885ae8557e58072c7928fb46b2af52587))
+
 ## 0.1.0 (2024-12-20)
 
 
