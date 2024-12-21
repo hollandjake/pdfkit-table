@@ -1,4 +1,5 @@
 import 'pdfkit';
+import { ExtendedPDFDocument } from './document';
 
 export type PDFTextOptions = PDFKit.Mixins.TextOptions;
 type NamedColor =
@@ -176,7 +177,10 @@ export type SideDefinition<T> =
 export type ExpandedSideDefinition<T = any> = { top: T; right: T; bottom: T; left: T };
 
 /** Measurement of size **/
-export type Size = number | `${number}` | `${number}${'em' | 'px' | 'in' | 'cm' | 'mm' | 'pt'}`;
+export type Size =
+  | number
+  | `${number}`
+  | `${number}${'em' | 'in' | 'px' | 'cm' | 'mm' | 'pc' | 'ex' | 'ch' | 'rem' | 'vw' | 'vmin' | 'vmax' | '%' | 'pt'}`;
 
 /** Measurement of how wide something is, false means 0 and true means 1 **/
 export type Wideness = Size | boolean;
@@ -192,7 +196,7 @@ export interface Cell
   > {
   /** How many columns this cell covers, follows the same logic as HTML `colspan` **/
   colspan?: number;
-  /** How many rows this cell covers **/
+  /** How many rows this cell covers, follows the same logic as HTML `rowspan` **/
   rowspan?: number;
 
   /**
@@ -205,9 +209,17 @@ export interface Cell
    */
   value?: any;
 
-  /** The padding for the cell **/
+  /**
+   * The padding for the cell
+   *
+   * @default 0.25em
+   */
   padding?: SideDefinition<Wideness>;
-  /** The border for the cell **/
+  /**
+   * The border for the cell
+   *
+   * @default 1pt
+   */
   border?: SideDefinition<Wideness>;
   /** The border colors for the cell **/
   borderColor?: SideDefinition<PDFColor>;
@@ -217,38 +229,45 @@ export interface Cell
 
   /** The color of the text **/
   textColor?: PDFColor;
-  /** The text stroke **/
+  /**
+   * The text stroke
+   *
+   * @default 0
+   */
   textStroke?: Wideness;
-  /** The text stroke **/
+  /** The text stroke color **/
   textStrokeColor?: PDFColor;
 
   /**
-   * The alignment of the text (center, justify, left, right)
+   * The alignment of the text
    *
    * To define both horizontal and vertical as centered use 'center'
    * Otherwise define the x and y alignments in an object
+   *
+   * @default { x: 'left', y: 'center' }
    */
-  align?: 'center' | { x?: 'left' | 'center' | 'right'; y?: 'top' | 'center' | 'bottom' };
+  align?: 'center' | { x?: 'left' | 'center' | 'right' | 'justify'; y?: 'top' | 'center' | 'bottom' };
 
-  /** The font of the cell **/
+  /** The font of the text **/
   font?: string;
-  /** The font family of the cell **/
+  /** The font family of the text **/
   fontFamily?: string;
-  /** The font size of the cell **/
+  /** The font size of the text **/
   fontSize?: Size;
+
+  /** Override the position of the cell **/
+  x?: Size;
+  /** Override the position of the cell **/
+  y?: Size;
 
   /** Render the debug lines of the cell **/
   debug?: boolean;
-
-  /** Override the position of the cell **/
-  x?: number;
-  /** Override the position of the cell **/
-  y?: number;
 }
 
-export interface ExtendedPage extends PDFKit.PDFPage {
-  contentWidth: number;
-  contentHeight: number;
-}
-
-export type NonUndefined<T> = T extends undefined ? never : T;
+export type ExtendedPDFDocumentOptions = Omit<PDFDocumentOptions, 'margin' | 'size'> & {
+  lazyRegisterFont?: (src: string, document: ExtendedPDFDocument) => void;
+  /** The document default font size **/
+  fontSize?: Size;
+  margin?: SideDefinition<Size>;
+  size?: [number, number] | string | undefined;
+};

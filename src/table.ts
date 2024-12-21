@@ -1,15 +1,52 @@
 import { ExtendedPDFDocument } from './document';
-import { Cell, Ensure, ExpandedSideDefinition, PDFColor, PDFTextOptions, SideDefinition, Wideness } from './types';
+import {
+  Cell,
+  Ensure,
+  ExpandedSideDefinition,
+  PDFColor,
+  PDFTextOptions,
+  SideDefinition,
+  Size,
+  Wideness,
+} from './types';
 import { normalizeSides } from './utils';
 
 export type PDFTableOpts = {
+  /** Number of columns you wish to divide the table into, allowing the width of a cell to be calculated **/
   cols?: number;
-  rowsPerPage?: number;
-  x?: number | undefined;
-  y?: number | undefined;
-  width?: number | undefined;
-  height?: number | undefined;
+  /** Number of rows you wish to divide the table into, allowing the height of a cell to be calculated **/
+  rows?: number;
+  /**
+   * Height of a cell
+   *
+   * If not provided it will compute it based on height / rows
+   *
+   * @note If neither rows nor cellHeight is provided, the default of 2em is used
+   */
+  cellHeight?: Size;
+  /**
+   * Width of a cell
+   *
+   * If not provided it will compute it based on width / cols
+   *
+   * @note If neither cols nor cellWidth is provided, the default of 25% of the table width is used
+   */
+  cellWidth?: Size;
+  /** Position of the table **/
+  x?: Size | undefined;
+  /** Position of the table **/
+  y?: Size | undefined;
+  /** The width of the table, undefined for page width **/
+  width?: Size | undefined;
+  /** The height of the table **/
+  height?: Size | undefined;
+  /**
+   * The thickness of the tables border
+   *
+   * Default is 0, so no table border (as the cells render it)
+   */
   border?: SideDefinition<Wideness>;
+  /** The border color of the table **/
   borderColor?: SideDefinition<PDFColor>;
   /** Any config you wish to apply to all cells **/
   defaultCell?: Cell;
@@ -24,33 +61,31 @@ export class PDFTable {
   private cellClaim: Set<string>;
   private readonly x: number;
   private readonly y: number;
+  private width: number;
+  private readonly height: number;
   private readonly border: ExpandedSideDefinition<number>;
   private readonly borderColor: ExpandedSideDefinition<PDFColor>;
+  private cols?: number;
 
   constructor(
     readonly document: ExtendedPDFDocument,
     readonly opts: PDFTableOpts
   ) {
-    this.x = opts.x ?? this.document.x;
-    this.y = opts.y ?? this.document.y;
+    // Normalise
+    this.x = document.sizeToPoint(opts.x, document.x);
+    this.y = document.sizeToPoint(opts.y, document.y);
+    this.width = document.sizeToPoint(opts.width, document.page.contentWidth - this.x);
+    this.height = document.sizeToPoint(opts.height, document.page.contentHeight - this.y);
 
-    if (!opts.width) {
-      if (opts.x) opts.width = this.document.page.contentWidth - opts.x;
-      else opts.width = this.document.page.contentWidth;
-    }
-    if (!opts.height) {
-      if (opts.y) opts.height = this.document.page.contentHeight - opts.y;
-      else opts.height = this.document.page.contentHeight;
-    }
+    this.cols = opts.cols;
+    if (opts.cols !== undefined && opts.cols <= 0) throw new Error('cols must be greater than 0');
+    this.cellWidth = document.sizeToPoint(opts.cellWidth, opts.cols ? this.width / opts.cols : this.width / 4);
+    this.cellHeight = document.sizeToPoint(opts.cellHeight, opts.rows ? this.height / opts.rows : '2em');
 
-    if (this.opts.cols === 0) throw new Error('cols must be greater than 0');
-    this.cellWidth = this.opts.cols ? this.opts.width! / this.opts.cols : 60; // Default cell width
+    if (opts.width === undefined && opts.cols !== undefined) this.width = this.cellWidth * opts.cols;
 
-    if (this.opts.rowsPerPage === 0) throw new Error('rowsPerPage must be greater than 0');
-    this.cellHeight = this.opts.rowsPerPage ? this.opts.height! / this.opts.rowsPerPage : 20; // Default cell height
-
-    this.border = normalizeSides(this.opts.border, 1, this.document.unitToPt.bind(this.document));
-    this.borderColor = normalizeSides(this.opts.borderColor);
+    this.border = normalizeSides(opts.border, 0, document.sizeToPoint.bind(document));
+    this.borderColor = normalizeSides(opts.borderColor);
 
     this.currCellX = 0;
     this.currCellY = 0;
@@ -58,10 +93,10 @@ export class PDFTable {
   }
 
   private initCellWidth(cols: number) {
-    if (this.opts.cols === undefined) {
-      this.opts.cols = cols;
-      if (this.opts.cols === 0) throw new Error('cols must be greater than 0');
-      this.cellWidth = this.opts.width! / this.opts.cols;
+    if (this.cols === undefined) {
+      this.cols = cols;
+      if (this.opts.cellWidth === undefined) this.cellWidth = this.width / cols;
+      if (this.opts.width === undefined) this.width = this.cellWidth * cols;
     }
   }
 
@@ -118,7 +153,7 @@ export class PDFTable {
       // Find first available cell
       while (this.cellClaim.has(`${this.currCellX},${this.currCellY}`)) {
         this.currCellX++;
-        if (this.opts.cols && this.currCellX >= this.opts.cols) {
+        if (this.cols && this.currCellX >= this.cols) {
           this.currCellX = 0;
           this.currCellY++;
         }
@@ -144,7 +179,7 @@ export class PDFTable {
       this.borderColor,
       this.x,
       this.y + startY * this.cellHeight,
-      this.opts.width!,
+      this.width,
       maxY - (this.y + startY * this.cellHeight),
       { top: startY === 0, right: true, bottom: false, left: true }
     );
@@ -167,7 +202,7 @@ export class PDFTable {
    */
   end() {
     // Draw bottom border
-    this.renderBorder(this.border, this.borderColor, this.x, this.document.y, this.opts.width!, 0, {
+    this.renderBorder(this.border, this.borderColor, this.x, this.document.y, this.width, 0, {
       top: false,
       right: false,
       bottom: true,
@@ -202,15 +237,15 @@ export class PDFTable {
     const rollbackFontSize = this.document.currentFontSize;
     const rollbackFontFamily = this.document.currentFontFamily;
     if (font) this.document.font(font, fontFamily);
-    const fontSize = this.document.unitToPt(_fontSize);
+    const fontSize = this.document.sizeToPoint(_fontSize);
     if (fontSize) this.document.fontSize(fontSize);
 
     // Normalize options
-    const border = normalizeSides(_border, 1, this.document.unitToPt.bind(this.document));
+    const border = normalizeSides(_border, 1, this.document.sizeToPoint.bind(this.document));
     const borderColor = normalizeSides(_borderColor, undefined);
-    const padding = normalizeSides(_padding, '0.25em', this.document.unitToPt.bind(this.document));
+    const padding = normalizeSides(_padding, '0.25em', this.document.sizeToPoint.bind(this.document));
     const align = _align === undefined || typeof _align === 'string' ? { x: _align, y: _align } : _align;
-    const textStroke = this.document.unitToPt(_textStroke);
+    const textStroke = this.document.sizeToPoint(_textStroke);
 
     // Default alignment
     if (align.x === undefined) align.x = 'left';
@@ -222,8 +257,8 @@ export class PDFTable {
     // Render the cell borders
     const rectHeight = this.cellHeight * rowspan;
     const rectWidth = this.cellWidth * colspan;
-    const posX = x ?? this.x + this.currCellX * this.cellWidth;
-    const posY = y ?? this.y + this.currCellY * this.cellHeight;
+    const posX = this.document.sizeToPoint(x, this.x + this.currCellX * this.cellWidth);
+    const posY = this.document.sizeToPoint(y, this.y + this.currCellY * this.cellHeight);
 
     if (backgroundColor !== undefined) {
       this.document.save().rect(posX, posY, rectWidth, rectHeight).fill(backgroundColor).restore();

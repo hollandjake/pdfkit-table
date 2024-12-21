@@ -28,7 +28,7 @@ test('content alignment', ({ expect }) => {
   const addContent = vi.spyOn(ExtendedPDFDocument.prototype, 'addContent');
   const doc = new ExtendedPDFDocument();
 
-  expect(addContent).toHaveBeenCalledWith('1 0 0 1 72 72 cm');
+  expect(addContent).toHaveBeenCalledWith('1 0 0 -1 72 720 cm');
   expect(addContent).toHaveBeenCalledWith('0 0 m');
   expect(doc.x).toBe(0);
   expect(doc.y).toBe(0);
