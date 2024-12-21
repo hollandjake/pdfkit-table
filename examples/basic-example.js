@@ -17,8 +17,8 @@ const path = require('path');
 // start pdf document
 const doc = new PDFDocument({ margin: 30, size: 'A4' });
 
-doc.registerFont('lato', path.join(__dirname, './Lato.ttc'), 'Lato-Regular').font('lato');
-
+doc.registerFont('lato', path.join(__dirname, './Lato.ttc'), 'Lato-Regular');
+doc.font('lato')
 // to save on server
 doc.pipe(fs.createWriteStream('./basic-example.pdf'));
 
@@ -41,15 +41,15 @@ doc.moveDown(); // so move it down by one line for the next table
 // Complex Table with Object
 // -----------------------------------------------------------------------------------------------------
 doc
-  .table({ width: 400, height: 100, rowsPerPage: 3, defaultCell: { fontSize: 16, align: 'center' } })
+  .table({ width: 400, height: 100, rows: 3, defaultCell: { fontSize: 16, align: 'center' } })
   .row(
     [
       { value: 'Name', colspan: 2 },
       { value: 'Country', rowspan: 2 },
     ],
-    { fontSize: 20, backgroundColor: 'pink' }
+    { fontSize: 20, backgroundColor: 'lightgray' }
   )
-  .row(['First Name', 'Last Name'], { backgroundColor: 'hotpink' })
+  .row(['First Name', 'Last Name'], { backgroundColor: 'lightgray' })
   .row([
     'Jake',
     'Holland',
