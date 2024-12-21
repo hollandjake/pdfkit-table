@@ -1,6 +1,6 @@
 {
   "name": "@hollandjake/pdfkit-table",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "PDFKit extension for generating tables",
   "license": "MIT",
   "author": "Jake Holland",
