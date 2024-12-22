@@ -9,8 +9,9 @@ export default defineConfig({
     },
   },
   build: {
-    target: 'es6',
+    target: ['node18', 'firefox102', 'safari14'],
     minify: false,
+    sourcemap: true,
     lib: {
       // Could also be a dictionary or array of multiple entry points
       entry: resolve(__dirname, './src/index.ts'),

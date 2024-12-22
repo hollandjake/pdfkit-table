@@ -9,12 +9,7 @@ import { ExtendedPDFDocument } from './document';
 import { ExpandedSideDefinition, ExtendedPDFDocumentOptions, SideDefinition, Size } from './types';
 import { normalizeSides } from './utils';
 
-const DEFAULT_MARGINS: SideDefinition<Size> = {
-  top: '1in',
-  left: '1in',
-  bottom: '1in',
-  right: '1in',
-};
+const DEFAULT_MARGINS: SideDefinition<Size> = '1in';
 
 const SIZES = {
   '4A0': [4767.87, 6740.79],
@@ -91,8 +86,13 @@ export class PDFPage {
     this.height = dimensions[this.layout === 'portrait' ? 1 : 0];
     this.content = this.document.ref({});
 
+    if (options.font !== undefined) document.font(options.font, options.fontFamily);
+    if (options.fontSize !== undefined) document.fontSize(options.fontSize);
+
     // process margins
-    this.margins = normalizeSides(options.margin, DEFAULT_MARGINS, x => document.sizeToPoint(x, undefined, this));
+    this.margins = normalizeSides(options.margins ?? options.margin, DEFAULT_MARGINS, x =>
+      document.sizeToPoint(x, 0, this)
+    );
 
     // Initialize the Font, XObject, and ExtGState dictionaries
     this.resources = this.document.ref({

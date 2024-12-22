@@ -264,10 +264,25 @@ export interface Cell
   debug?: boolean;
 }
 
-export type ExtendedPDFDocumentOptions = Omit<PDFDocumentOptions, 'margin' | 'size'> & {
-  lazyRegisterFont?: (src: string, document: ExtendedPDFDocument) => void;
+export type ExtendedPDFDocumentOptions = Omit<PDFDocumentOptions, 'margin' | 'margins' | 'size' | 'font'> & {
+  lazyRegisterFont?: (document: ExtendedPDFDocument, src: string, family: string | undefined) => void;
   /** The document default font size **/
   fontSize?: Size;
+  /** The document default font **/
+  font?: string;
+  /** The document default font family **/
+  fontFamily?: string;
+  /**
+   * The page margins
+   *
+   * @alias margins
+   */
   margin?: SideDefinition<Size>;
+  /**
+   * The page margins
+   *
+   * @alias margin
+   */
+  margins?: SideDefinition<Size>;
   size?: [number, number] | string | undefined;
 };
