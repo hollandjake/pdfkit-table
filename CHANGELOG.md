@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/hollandjake/pdfkit-table/compare/v0.2.0...v0.2.1) (2024-12-22)
+
+
+### Bug Fixes
+
+* align build to same as PDFKit ([141dee2](https://github.com/hollandjake/pdfkit-table/commit/141dee2843d986c3c3df8a1aa21aa6fdd83f5a0b))
+* fix unit conversions ([72f8930](https://github.com/hollandjake/pdfkit-table/commit/72f8930abc49b984ed9b51b8dd0cd18cdc126657))
+
 ## [0.2.0](https://github.com/hollandjake/pdfkit-table/compare/v0.1.0...v0.2.0) (2024-12-21)
 
 
