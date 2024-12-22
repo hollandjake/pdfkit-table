@@ -1,4 +1,5 @@
 import PDFDocument from 'pdfkit';
+import { CM_TO_IN, IN_TO_PT, MM_TO_CM, PC_TO_PT, PX_TO_IN } from './constants';
 import { PDFPage } from './page';
 import { PDFTable, PDFTableOpts } from './table';
 import { ExtendedPDFDocumentOptions, PDFFontSource, Size } from './types';
@@ -26,11 +27,16 @@ export class ExtendedPDFDocument extends PDFDocument {
   // @ts-ignore Initialized internally
   private _root: any;
 
+  private readonly remSize: number;
+
   constructor(options: ExtendedPDFDocumentOptions = {}) {
     super(options as never);
     this.options = options;
 
+    if (options.font !== undefined) this.font(options.font, options.fontFamily);
     if (options.fontSize !== undefined) this.fontSize(options.fontSize);
+
+    this.remSize = this.currentFontSize;
   }
 
   // @ts-ignore Complaints about margin is irrelevant as it isn't used internally
@@ -75,20 +81,16 @@ export class ExtendedPDFDocument extends PDFDocument {
       family = undefined;
     }
 
-    if (
-      this.currentFont === src &&
-      (!family || this.currentFontFamily === family) &&
-      (!size || this.currentFontSize === size)
-    ) {
+    if (this.currentFont === src && this.currentFontFamily === family && (!size || this.currentFontSize === size)) {
       return this;
+    }
+
+    if (this.options.lazyRegisterFont && typeof src === 'string' && !(src in this._registeredFonts)) {
+      this.options.lazyRegisterFont(this, src, family);
     }
 
     this.currentFont = src;
     this.currentFontFamily = family;
-
-    if (this.options.lazyRegisterFont && typeof src === 'string' && !(src in this._registeredFonts)) {
-      this.options.lazyRegisterFont(src, this);
-    }
 
     if (family) return super.font(src, family, size);
     else return super.font(src, size);
@@ -122,7 +124,7 @@ export class ExtendedPDFDocument extends PDFDocument {
     }
     if (typeof size === 'boolean') return Number(size);
 
-    const match = String(size).match(/((\d+)?(\.\d+)?)(em|in|px|cm|mm|pc|ex|ch|rem|vw|vmin|vmax|%|pt)?/);
+    const match = String(size).match(/((\d+)?(\.\d+)?)(em|in|px|cm|mm|pc|ex|ch|rem|vw|vh|vmin|vmax|%|pt)?/);
     if (!match) throw new Error(`Unsupported size '${size}'`);
     let multiplier: number;
     switch (match[4]) {
@@ -130,19 +132,19 @@ export class ExtendedPDFDocument extends PDFDocument {
         multiplier = this.currentFontSize;
         break;
       case 'in':
-        multiplier = UNIT_CONVERSIONS.IN_TO_PT;
+        multiplier = IN_TO_PT;
         break;
       case 'px':
-        multiplier = UNIT_CONVERSIONS.PX_TO_IN * UNIT_CONVERSIONS.IN_TO_PT;
+        multiplier = PX_TO_IN * IN_TO_PT;
         break;
       case 'cm':
-        multiplier = UNIT_CONVERSIONS.CM_TO_IN * UNIT_CONVERSIONS.IN_TO_PT;
+        multiplier = CM_TO_IN * IN_TO_PT;
         break;
       case 'mm':
-        multiplier = UNIT_CONVERSIONS.MM_TO_CM * UNIT_CONVERSIONS.CM_TO_IN * UNIT_CONVERSIONS.IN_TO_PT;
+        multiplier = MM_TO_CM * CM_TO_IN * IN_TO_PT;
         break;
       case 'pc':
-        multiplier = UNIT_CONVERSIONS.PC_TO_PT;
+        multiplier = PC_TO_PT;
         break;
       case 'ex':
         multiplier = this.currentLineHeight();
@@ -151,7 +153,7 @@ export class ExtendedPDFDocument extends PDFDocument {
         multiplier = this.widthOfString('0');
         break;
       case 'rem':
-        multiplier = 12; // Default font size
+        multiplier = this.remSize;
         break;
       case 'vw':
         multiplier = page.width / 100;
@@ -176,11 +178,3 @@ export class ExtendedPDFDocument extends PDFDocument {
     return multiplier * Number(match[1]);
   }
 }
-
-const UNIT_CONVERSIONS = {
-  MM_TO_CM: 1000,
-  CM_TO_IN: 25.2 / 64, // 1CM = 25.2/64 IN
-  PX_TO_IN: 1 / 96, // 1 PX = 1/96 IN
-  IN_TO_PT: 72, // 1 IN = 72 PT
-  PC_TO_PT: 12, // 1 PC = 12 PT
-};
