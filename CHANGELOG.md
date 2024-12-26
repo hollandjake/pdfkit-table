@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/hollandjake/pdfkit-table/compare/v0.2.1...v0.2.2) (2024-12-26)
+
+
+### Bug Fixes
+
+* export types ([b4d7566](https://github.com/hollandjake/pdfkit-table/commit/b4d7566e4b03bea5fe76f8191e1cf530b1785a68))
+
 ## [0.2.1](https://github.com/hollandjake/pdfkit-table/compare/v0.2.0...v0.2.1) (2024-12-22)
 
 
